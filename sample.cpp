@@ -14,8 +14,10 @@ int get(ints vec, int index)
 int main(int argc, char *argv[])
 {
     ints vec = {1, 2, 3, 4, 5};
-    int a = SErr(get)(vec, 2);
-    int b = SErr(get)(vec, 7);
+    int a = SL(get, vec, 2);
+    printf("a = %d\n", a);
+    int b = SL(get, vec, 7);
+    printf("b = %d\n", b);
 
     return 0;
 }

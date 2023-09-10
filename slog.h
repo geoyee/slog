@@ -6,6 +6,7 @@
 #include <functional>
 #include <ctime>
 #include <chrono>
+#include <iomanip>
 #include <cassert>
 #include <type_traits>
 
@@ -53,10 +54,10 @@ typedef enum
     while (0)
 #endif
 
-std::string getNowTimeStr()
+std::string nowTimeStr()
 {
-    time_t t = std::time(nullptr);
-    char buffer[128];
+    std::time_t t = std::time(nullptr);
+    char buffer[20];
     std::strftime(
         buffer,
         sizeof(buffer),
@@ -73,48 +74,66 @@ class TimeLog<RET(ARGS...)>
 {
 private:
     std::function<RET(ARGS...)> _func;
+    std::string _func_name;
+    std::string _file_name;
+    std::string _args_name;
+    int _line_no;
 
 public:
-    TimeLog(std::function<RET(ARGS...)> func) : _func(func) {}
+    TimeLog(std::function<RET(ARGS...)> func,
+            const char *func_name,
+            const char *file_name,
+            const char *args_name,
+            int line_no)
+        : _func(func), _func_name(func_name), _file_name(file_name), _args_name(args_name), _line_no(line_no)
+    {
+    }
     RET operator()(ARGS... args)
     {
-        SINFO(CE_Debug, CPLE_None, "[%s] %s", getNowTimeStr().c_str(), __FUNCTION__);
+        SINFO(CE_Debug, CPLE_None, "~ %s", nowTimeStr().c_str());
+        SINFO(CE_Debug, CPLE_None, "  [Function]\t%s(%s)", _func_name.c_str(), _args_name.c_str());
+        SINFO(CE_Debug, CPLE_None, "  [Location]\t%s (%d)", _file_name.c_str(), _line_no);
         auto start_time = std::chrono::high_resolution_clock::now();
         try
         {
             RET result = _func(args...);
             auto duration = std::chrono::high_resolution_clock::now() - start_time;
             float ms = duration.count() * 1000.0f;
-            SINFO(CE_Debug, CPLE_None, "[Finished] %f ms", ms);
+            SINFO(CE_Debug, CPLE_None, "  [Success]\tIt takes %f ms", ms);
             return result;
         }
         catch (const std::exception &ex)
         {
-            SINFO(CE_Failure,
-                  CPLE_AppDefined,
-                  "[Failure] %s (%d): %s", __FILE__, __LINE__, ex.what());
+            SINFO(CE_Failure, CPLE_AppDefined, "  [Failure]\t%s", ex.what());
             return RET();
         }
         catch (...)
         {
-            SINFO(CE_Fatal,
-                  CPLE_AppDefined,
-                  "[Fatal] %s (%d): Unknown exception", __FILE__, __LINE__);
+            SINFO(CE_Fatal, CPLE_AppDefined, "  [Fatal]\tUnknown exception");
             return RET();
         }
     }
 };
 
 template <typename RET, typename... ARGS>
-TimeLog<RET(ARGS...)> makeTimeLogFunction(RET (*func)(ARGS...))
+TimeLog<RET(ARGS...)> makeTimeLogFunction(RET (*func)(ARGS...),
+                                          const char *func_name,
+                                          const char *file_name,
+                                          const char *args_name,
+                                          int line_no)
 {
-    return TimeLog<RET(ARGS...)>(std::function<RET(ARGS...)>(func));
+    return TimeLog<RET(ARGS...)>(std::function<RET(ARGS...)>(func),
+                                 func_name,
+                                 file_name,
+                                 args_name,
+                                 line_no);
 }
 
 #ifdef _DEBUG
-#define SErr(func) makeTimeLogFunction(func)
+#define SL(func, ARGS...) \
+    makeTimeLogFunction(func, #func, __FILE__, #ARGS, __LINE__)(ARGS)
 #else
-#define SErr(func) func
+#define SL(func, ARGS...) func(ARGS)
 #endif // _DEBUG
 
 #endif // _SLOG_H_
