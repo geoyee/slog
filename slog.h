@@ -85,22 +85,91 @@ public:
             const char *file_name,
             const char *args_name,
             int line_no)
-        : _func(func), _func_name(func_name), _file_name(file_name), _args_name(args_name), _line_no(line_no)
+        : _func(func),
+          _func_name(func_name),
+          _file_name(file_name),
+          _args_name(args_name),
+          _line_no(line_no)
     {
+    }
+    template <typename CLS>
+    TimeLog(RET (CLS::*func)(ARGS...),
+            CLS *obj,
+            const char *func_name,
+            const char *file_name,
+            const char *args_name,
+            int line_no)
+        : _func_name(func_name),
+          _file_name(file_name),
+          _args_name(args_name),
+          _line_no(line_no)
+    {
+        const int argc = sizeof...(ARGS);
+        if constexpr (argc == 0)
+            _func = std::bind(func, obj);
+        else if constexpr (argc == 1)
+            _func = std::bind(func, obj,
+                              std::placeholders::_1);
+        else if constexpr (argc == 2)
+            _func = std::bind(func, obj,
+                              std::placeholders::_1,
+                              std::placeholders::_2);
+        else if constexpr (argc == 3)
+            _func = std::bind(func, obj,
+                              std::placeholders::_1,
+                              std::placeholders::_2,
+                              std::placeholders::_3);
+        else if constexpr (argc == 4)
+            _func = std::bind(func, obj,
+                              std::placeholders::_1,
+                              std::placeholders::_2,
+                              std::placeholders::_3,
+                              std::placeholders::_4);
+        else if constexpr (argc == 5)
+            _func = std::bind(func, obj,
+                              std::placeholders::_1,
+                              std::placeholders::_2,
+                              std::placeholders::_3,
+                              std::placeholders::_4,
+                              std::placeholders::_5);
+        else if constexpr (argc == 6)
+            _func = std::bind(func, obj,
+                              std::placeholders::_1,
+                              std::placeholders::_2,
+                              std::placeholders::_3,
+                              std::placeholders::_4,
+                              std::placeholders::_5,
+                              std::placeholders::_6);
+        else
+            assert(false);
     }
     RET operator()(ARGS... args)
     {
         SINFO(CE_Debug, CPLE_None, "~ %s", nowTimeStr().c_str());
         SINFO(CE_Debug, CPLE_None, "  [Function]\t%s(%s)", _func_name.c_str(), _args_name.c_str());
         SINFO(CE_Debug, CPLE_None, "  [Location]\t%s (%d)", _file_name.c_str(), _line_no);
-        auto start_time = std::chrono::high_resolution_clock::now();
         try
         {
-            RET result = _func(args...);
-            auto duration = std::chrono::high_resolution_clock::now() - start_time;
-            float ms = duration.count() * 1000.0f;
-            SINFO(CE_Debug, CPLE_None, "  [Success]\tIt takes %f ms", ms);
-            return result;
+            if constexpr (std::is_same<RET, void>::value)
+            {
+                auto start_time = std::chrono::high_resolution_clock::now();
+                _func(args...);
+                std::chrono::duration<double> duration =
+                    std::chrono::high_resolution_clock::now() - start_time;
+                double ms = duration.count() * 1000.0;
+                SINFO(CE_Debug, CPLE_None, "  [Success]\tIt takes %lf ms", ms);
+                return;
+            }
+            else
+            {
+                auto start_time = std::chrono::high_resolution_clock::now();
+                RET result = _func(args...);
+                std::chrono::duration<double> duration =
+                    std::chrono::high_resolution_clock::now() - start_time;
+                double ms = duration.count() * 1000.0;
+                SINFO(CE_Debug, CPLE_None, "  [Success]\tIt takes %lf ms", ms);
+                return result;
+            }
         }
         catch (const std::exception &ex)
         {
@@ -129,11 +198,30 @@ TimeLog<RET(ARGS...)> makeTimeLogFunction(RET (*func)(ARGS...),
                                  line_no);
 }
 
+template <typename RET, typename CLS, typename... ARGS>
+TimeLog<RET(ARGS...)> makeTimeLogClassFunction(RET (CLS::*func)(ARGS...),
+                                               CLS *obj,
+                                               const char *func_name,
+                                               const char *file_name,
+                                               const char *args_name,
+                                               int line_no)
+{
+    return TimeLog<RET(ARGS...)>(func,
+                                 obj,
+                                 func_name,
+                                 file_name,
+                                 args_name,
+                                 line_no);
+}
+
 #ifdef _DEBUG
 #define SL(func, ARGS...) \
     makeTimeLogFunction(func, #func, __FILE__, #ARGS, __LINE__)(ARGS)
+#define SLC6(obj, func, ARGS...) \
+    makeTimeLogClassFunction(&func, &obj, #func, __FILE__, #ARGS, __LINE__)(ARGS)
 #else
 #define SL(func, ARGS...) func(ARGS)
+#define SLC6(obj, func, ARGS...) std::bind(&func, &obj, ARGS)()
 #endif // _DEBUG
 
 #endif // _SLOG_H_
