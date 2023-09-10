@@ -33,3 +33,6 @@
 
 # Debug files
 build/
+
+# IDE
+.vscode/
