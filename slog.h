@@ -1,7 +1,7 @@
 /*
- @ brief: A simple log system for C++17
- @ author: Yizhou Chen
- @ date: 2023-09-10
+ @ brief:   A simple log system for C++17
+ @ author:  Yizhou Chen
+ @ date:    2023-09-10
  @ version: 1.0.0
  */
 
@@ -112,6 +112,7 @@ public:
           _line_no(line_no)
     {
         const int argc = sizeof...(ARGS);
+        // TODO: instead of if constexpr, support c++14
         if constexpr (argc == 0)
             _func = std::bind(func, obj);
         else if constexpr (argc == 1)

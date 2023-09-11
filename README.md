@@ -56,5 +56,3 @@ e = -1
 ## 依赖
 
 1. [\*GDAL](https://github.com/OSGeo/gdal)
-
-_\*为非必须项_
