@@ -62,7 +62,7 @@ std::string nowTimeStr()
         buffer,
         sizeof(buffer),
         "%Y/%m/%d %H:%M:%S",
-        std::localtime_s(&t));
+        std::localtime(&t));
     return std::string(buffer);
 }
 
