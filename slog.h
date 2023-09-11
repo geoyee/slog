@@ -1,3 +1,10 @@
+/*
+ @ brief: A simple log system for C++17
+ @ author: Yizhou Chen
+ @ date: 2023-09-10
+ @ version: 1.0.0
+ */
+
 #ifndef _SLOG_H_
 #define _SLOG_H_
 
@@ -66,54 +73,6 @@ std::string nowTimeStr()
     return std::string(buffer);
 }
 
-template <size_t ARGC>
-std::enable_if_t<ARGC == 0, RET (*)(ARGS...)> GetFunc(RET (CLS::*func)(ARGS...),
-                                                      CLS *obj) {
-  return std::bind(func, obj);
-}
-
-template <size_t ARGC>
-std::enable_if_t<ARGC == 1, RET (*)(ARGS...)> GetFunc(RET (CLS::*func)(ARGS...),
-                                                      CLS *obj) {
-  return std::bind(func, obj, std::placeholders::_1);
-}
-
-template <size_t ARGC>
-std::enable_if_t<ARGC == 2, RET (*)(ARGS...)> GetFunc(RET (CLS::*func)(ARGS...),
-                                                      CLS *obj) {
-  return std::bind(func, obj, std::placeholders::_1, std::placeholders::_2);
-}
-
-template <size_t ARGC>
-std::enable_if_t<ARGC == 3, RET (*)(ARGS...)> GetFunc(RET (CLS::*func)(ARGS...),
-                                                      CLS *obj) {
-  return std::bind(func, obj, std::placeholders::_1, std::placeholders::_2,
-                   std::placeholders::_3);
-}
-
-template <size_t ARGC>
-std::enable_if_t<ARGC == 4, RET (*)(ARGS...)> GetFunc(RET (CLS::*func)(ARGS...),
-                                                      CLS *obj) {
-  return std::bind(func, obj, std::placeholders::_1, std::placeholders::_2,
-                   std::placeholders::_3, std::placeholders::_4);
-}
-
-template <size_t ARGC>
-std::enable_if_t<ARGC == 5, RET (*)(ARGS...)> GetFunc(RET (CLS::*func)(ARGS...),
-                                                      CLS *obj) {
-  return std::bind(func, obj, std::placeholders::_1, std::placeholders::_2,
-                   std::placeholders::_3, std::placeholders::_4,
-                   std::placeholders::_5);
-}
-
-template <size_t ARGC>
-std::enable_if_t<ARGC == 6, RET (*)(ARGS...)> GetFunc(RET (CLS::*func)(ARGS...),
-                                                      CLS *obj) {
-  return std::bind(func, obj, std::placeholders::_1, std::placeholders::_2,
-                   std::placeholders::_3, std::placeholders::_4,
-                   std::placeholders::_5, std::placeholders::_6);
-}
-
 template <typename>
 class TimeLog;
 
@@ -147,12 +106,49 @@ public:
             const char *file_name,
             const char *args_name,
             int line_no)
-        : _func(GetFunc<sizeof...(ARGS)>(func, obj)),
-          _func_name(func_name),
+        : _func_name(func_name),
           _file_name(file_name),
           _args_name(args_name),
           _line_no(line_no)
     {
+        const int argc = sizeof...(ARGS);
+        if constexpr (argc == 0)
+            _func = std::bind(func, obj);
+        else if constexpr (argc == 1)
+            _func = std::bind(func, obj,
+                              std::placeholders::_1);
+        else if constexpr (argc == 2)
+            _func = std::bind(func, obj,
+                              std::placeholders::_1,
+                              std::placeholders::_2);
+        else if constexpr (argc == 3)
+            _func = std::bind(func, obj,
+                              std::placeholders::_1,
+                              std::placeholders::_2,
+                              std::placeholders::_3);
+        else if constexpr (argc == 4)
+            _func = std::bind(func, obj,
+                              std::placeholders::_1,
+                              std::placeholders::_2,
+                              std::placeholders::_3,
+                              std::placeholders::_4);
+        else if constexpr (argc == 5)
+            _func = std::bind(func, obj,
+                              std::placeholders::_1,
+                              std::placeholders::_2,
+                              std::placeholders::_3,
+                              std::placeholders::_4,
+                              std::placeholders::_5);
+        else if constexpr (argc == 6)
+            _func = std::bind(func, obj,
+                              std::placeholders::_1,
+                              std::placeholders::_2,
+                              std::placeholders::_3,
+                              std::placeholders::_4,
+                              std::placeholders::_5,
+                              std::placeholders::_6);
+        else
+            assert(false);
     }
     RET operator()(ARGS... args)
     {
@@ -225,14 +221,35 @@ TimeLog<RET(ARGS...)> makeTimeLogClassFunction(RET (CLS::*func)(ARGS...),
                                  line_no);
 }
 
-#ifdef _DEBUG
+#ifdef _SLOG_DEBUG
+#define SSF                                                                  \
+    SINFO(CE_Debug, CPLE_None, "- %s", nowTimeStr().c_str());                \
+    SINFO(CE_Debug, CPLE_None, "  [Function]\t%s", __FUNCTION__);            \
+    SINFO(CE_Debug, CPLE_None, "  [Location]\t%s (%d)", __FILE__, __LINE__); \
+    try                                                                      \
+    {
+
+#define SEF(result)                                                       \
+    }                                                                     \
+    catch (const std::exception &ex)                                      \
+    {                                                                     \
+        SINFO(CE_Failure, CPLE_AppDefined, "  [Failure]\t%s", ex.what()); \
+        return result;                                                    \
+    }                                                                     \
+    catch (...)                                                           \
+    {                                                                     \
+        SINFO(CE_Fatal, CPLE_AppDefined, "  [Fatal]\tUnknown exception"); \
+        return result;                                                    \
+    }
 #define SL(func, ...) \
     makeTimeLogFunction(func, #func, __FILE__, #__VA_ARGS__, __LINE__)(__VA_ARGS__)
 #define SLC6(obj, func, ...) \
     makeTimeLogClassFunction(&func, &obj, #func, __FILE__, #__VA_ARGS__, __LINE__)(__VA_ARGS__)
 #else
+#define SSF
+#define SEF(result)
 #define SL(func, ...) func(__VA_ARGS__)
 #define SLC6(obj, func, ...) std::bind(&func, &obj, __VA_ARGS__)()
-#endif // _DEBUG
+#endif // _SLOG_DEBUG
 
 #endif // _SLOG_H_

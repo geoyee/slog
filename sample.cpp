@@ -1,4 +1,4 @@
-#define _DEBUG
+#define _SLOG_DEBUG
 
 #include <iostream>
 #include <vector>
@@ -23,12 +23,20 @@ public:
     void init(ints vec)
     {
         _vec = vec;
-        printf("init vec\n");
     }
     int get(int index)
     {
         return _vec.at(index);
     }
+};
+
+int get2(ints vec, int index)
+{
+    SSF
+
+        return vec.at(index);
+
+    SEF(-1)
 };
 
 int main(int argc, char *argv[])
@@ -39,8 +47,12 @@ int main(int argc, char *argv[])
 
     IntVec iv;
     SLC6(iv, IntVec::init, vec);
+    printf("init vec\n");
     int d = SLC6(iv, IntVec::get, 7);
     printf("b = %d\n", d);
+
+    int e = get2(vec, -2);
+    printf("e = %d\n", e);
 
     return 0;
 }
