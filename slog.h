@@ -44,13 +44,13 @@ typedef enum
 #include <cpl_error.h>
 #define SINFO CPLError
 #else
-#define SINFO(eErrClass, err_no, ARGS...) \
-    {                                     \
-        fprintf(stderr, ARGS);            \
-        fprintf(stderr, "\n");            \
-        if (eErrClass == CE_Fatal)        \
-            exit(1);                      \
-    }                                     \
+#define SINFO(eErrClass, err_no, ...) \
+    {                                 \
+        fprintf(stderr, __VA_ARGS__); \
+        fprintf(stderr, "\n");        \
+        if (eErrClass == CE_Fatal)    \
+            exit(1);                  \
+    }                                 \
     while (0)
 #endif
 
@@ -62,7 +62,7 @@ std::string nowTimeStr()
         buffer,
         sizeof(buffer),
         "%Y/%m/%d %H:%M:%S",
-        std::localtime(&t));
+        std::localtime_s(&t));
     return std::string(buffer);
 }
 
@@ -215,13 +215,13 @@ TimeLog<RET(ARGS...)> makeTimeLogClassFunction(RET (CLS::*func)(ARGS...),
 }
 
 #ifdef _DEBUG
-#define SL(func, ARGS...) \
-    makeTimeLogFunction(func, #func, __FILE__, #ARGS, __LINE__)(ARGS)
-#define SLC6(obj, func, ARGS...) \
-    makeTimeLogClassFunction(&func, &obj, #func, __FILE__, #ARGS, __LINE__)(ARGS)
+#define SL(func, ...) \
+    makeTimeLogFunction(func, #func, __FILE__, #__VA_ARGS__, __LINE__)(__VA_ARGS__)
+#define SLC6(obj, func, ...) \
+    makeTimeLogClassFunction(&func, &obj, #func, __FILE__, #__VA_ARGS__, __LINE__)(__VA_ARGS__)
 #else
-#define SL(func, ARGS...) func(ARGS)
-#define SLC6(obj, func, ARGS...) std::bind(&func, &obj, ARGS)()
+#define SL(func, ...) func(__VA_ARGS__)
+#define SLC6(obj, func, ...) std::bind(&func, &obj, __VA_ARGS__)()
 #endif // _DEBUG
 
 #endif // _SLOG_H_
