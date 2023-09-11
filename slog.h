@@ -66,6 +66,54 @@ std::string nowTimeStr()
     return std::string(buffer);
 }
 
+template <size_t ARGC>
+std::enable_if_t<ARGC == 0, RET (*)(ARGS...)> GetFunc(RET (CLS::*func)(ARGS...),
+                                                      CLS *obj) {
+  return std::bind(func, obj);
+}
+
+template <size_t ARGC>
+std::enable_if_t<ARGC == 1, RET (*)(ARGS...)> GetFunc(RET (CLS::*func)(ARGS...),
+                                                      CLS *obj) {
+  return std::bind(func, obj, std::placeholders::_1);
+}
+
+template <size_t ARGC>
+std::enable_if_t<ARGC == 2, RET (*)(ARGS...)> GetFunc(RET (CLS::*func)(ARGS...),
+                                                      CLS *obj) {
+  return std::bind(func, obj, std::placeholders::_1, std::placeholders::_2);
+}
+
+template <size_t ARGC>
+std::enable_if_t<ARGC == 3, RET (*)(ARGS...)> GetFunc(RET (CLS::*func)(ARGS...),
+                                                      CLS *obj) {
+  return std::bind(func, obj, std::placeholders::_1, std::placeholders::_2,
+                   std::placeholders::_3);
+}
+
+template <size_t ARGC>
+std::enable_if_t<ARGC == 4, RET (*)(ARGS...)> GetFunc(RET (CLS::*func)(ARGS...),
+                                                      CLS *obj) {
+  return std::bind(func, obj, std::placeholders::_1, std::placeholders::_2,
+                   std::placeholders::_3, std::placeholders::_4);
+}
+
+template <size_t ARGC>
+std::enable_if_t<ARGC == 5, RET (*)(ARGS...)> GetFunc(RET (CLS::*func)(ARGS...),
+                                                      CLS *obj) {
+  return std::bind(func, obj, std::placeholders::_1, std::placeholders::_2,
+                   std::placeholders::_3, std::placeholders::_4,
+                   std::placeholders::_5);
+}
+
+template <size_t ARGC>
+std::enable_if_t<ARGC == 6, RET (*)(ARGS...)> GetFunc(RET (CLS::*func)(ARGS...),
+                                                      CLS *obj) {
+  return std::bind(func, obj, std::placeholders::_1, std::placeholders::_2,
+                   std::placeholders::_3, std::placeholders::_4,
+                   std::placeholders::_5, std::placeholders::_6);
+}
+
 template <typename>
 class TimeLog;
 
@@ -99,49 +147,12 @@ public:
             const char *file_name,
             const char *args_name,
             int line_no)
-        : _func_name(func_name),
+        : _func(GetFunc<sizeof...(ARGS)>(func, obj)),
+          _func_name(func_name),
           _file_name(file_name),
           _args_name(args_name),
           _line_no(line_no)
     {
-        const int argc = sizeof...(ARGS);
-        if constexpr (argc == 0)
-            _func = std::bind(func, obj);
-        else if constexpr (argc == 1)
-            _func = std::bind(func, obj,
-                              std::placeholders::_1);
-        else if constexpr (argc == 2)
-            _func = std::bind(func, obj,
-                              std::placeholders::_1,
-                              std::placeholders::_2);
-        else if constexpr (argc == 3)
-            _func = std::bind(func, obj,
-                              std::placeholders::_1,
-                              std::placeholders::_2,
-                              std::placeholders::_3);
-        else if constexpr (argc == 4)
-            _func = std::bind(func, obj,
-                              std::placeholders::_1,
-                              std::placeholders::_2,
-                              std::placeholders::_3,
-                              std::placeholders::_4);
-        else if constexpr (argc == 5)
-            _func = std::bind(func, obj,
-                              std::placeholders::_1,
-                              std::placeholders::_2,
-                              std::placeholders::_3,
-                              std::placeholders::_4,
-                              std::placeholders::_5);
-        else if constexpr (argc == 6)
-            _func = std::bind(func, obj,
-                              std::placeholders::_1,
-                              std::placeholders::_2,
-                              std::placeholders::_3,
-                              std::placeholders::_4,
-                              std::placeholders::_5,
-                              std::placeholders::_6);
-        else
-            assert(false);
     }
     RET operator()(ARGS... args)
     {
