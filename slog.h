@@ -1,7 +1,7 @@
 /*
- @ brief:   A simple log system for C++17
+ @ brief:   A simple log system for C++14
  @ author:  Yizhou Chen
- @ date:    2023-09-10
+ @ date:    2023-09-13
  @ version: 1.0.0
  */
 
@@ -16,6 +16,7 @@
 #include <iomanip>
 #include <cassert>
 #include <type_traits>
+#include <utility>
 
 typedef enum
 {
@@ -73,6 +74,89 @@ std::string nowTimeStr()
     return std::string(buffer);
 }
 
+// `if constexpr` is a C++17 feature, so used `std::enable_if_t` instead
+
+template <typename CLS, typename RET, typename... ARGS, std::enable_if_t<sizeof...(ARGS) == 0, int> = 1>
+std::function<RET(ARGS...)> makePlaceholders(RET (CLS::*func)(ARGS...), CLS *obj)
+{
+    return std::bind(func, obj);
+}
+
+template <typename CLS, typename RET, typename... ARGS, std::enable_if_t<sizeof...(ARGS) == 1, int> = 1>
+std::function<RET(ARGS...)> makePlaceholders(RET (CLS::*func)(ARGS...), CLS *obj)
+{
+    return std::bind(func, obj, std::placeholders::_1);
+}
+
+template <typename CLS, typename RET, typename... ARGS, std::enable_if_t<sizeof...(ARGS) == 2, int> = 1>
+std::function<RET(ARGS...)> makePlaceholders(RET (CLS::*func)(ARGS...), CLS *obj)
+{
+    return std::bind(func, obj, std::placeholders::_1,
+                     std::placeholders::_2);
+}
+
+template <typename CLS, typename RET, typename... ARGS, std::enable_if_t<sizeof...(ARGS) == 3, int> = 1>
+std::function<RET(ARGS...)> makePlaceholders(RET (CLS::*func)(ARGS...), CLS *obj)
+{
+    return std::bind(func, obj, std::placeholders::_1,
+                     std::placeholders::_2,
+                     std::placeholders::_3);
+}
+
+template <typename CLS, typename RET, typename... ARGS, std::enable_if_t<sizeof...(ARGS) == 4, int> = 1>
+std::function<RET(ARGS...)> makePlaceholders(RET (CLS::*func)(ARGS...), CLS *obj)
+{
+    return std::bind(func, obj, std::placeholders::_1,
+                     std::placeholders::_2,
+                     std::placeholders::_3,
+                     std::placeholders::_4);
+}
+
+template <typename CLS, typename RET, typename... ARGS, std::enable_if_t<sizeof...(ARGS) == 5, int> = 1>
+std::function<RET(ARGS...)> makePlaceholders(RET (CLS::*func)(ARGS...), CLS *obj)
+{
+    return std::bind(func, obj, std::placeholders::_1,
+                     std::placeholders::_2,
+                     std::placeholders::_3,
+                     std::placeholders::_4,
+                     std::placeholders::_5);
+}
+
+template <typename CLS, typename RET, typename... ARGS, std::enable_if_t<sizeof...(ARGS) == 6, int> = 1>
+std::function<RET(ARGS...)> makePlaceholders(RET (CLS::*func)(ARGS...), CLS *obj)
+{
+    return std::bind(func, obj, std::placeholders::_1,
+                     std::placeholders::_2,
+                     std::placeholders::_3,
+                     std::placeholders::_4,
+                     std::placeholders::_5,
+                     std::placeholders::_6);
+}
+
+template <typename RET, typename... ARGS, std::enable_if_t<!std::is_same<RET, void>::value, int> = 1>
+RET runFunction(std::function<RET(ARGS...)> func, ARGS... args)
+{
+    auto start_time = std::chrono::high_resolution_clock::now();
+    RET result = func(args...);
+    std::chrono::duration<double> duration =
+        std::chrono::high_resolution_clock::now() - start_time;
+    double ms = duration.count() * 1000.0;
+    SINFO(CE_Debug, CPLE_None, "  [Success]\tIt takes %lf ms", ms);
+    return result;
+}
+
+template <typename RET, typename... ARGS, std::enable_if_t<std::is_same<RET, void>::value, int> = 1>
+RET runFunction(std::function<RET(ARGS...)> func, ARGS... args)
+{
+    auto start_time = std::chrono::high_resolution_clock::now();
+    func(args...);
+    std::chrono::duration<double> duration =
+        std::chrono::high_resolution_clock::now() - start_time;
+    double ms = duration.count() * 1000.0;
+    SINFO(CE_Debug, CPLE_None, "  [Success]\tIt takes %lf ms", ms);
+    return RET();
+}
+
 template <typename>
 class TimeLog;
 
@@ -87,11 +171,11 @@ private:
     int _line_no;
 
 public:
-    TimeLog(std::function<RET(ARGS...)> func,
-            const char *func_name,
-            const char *file_name,
-            const char *args_name,
-            int line_no)
+    constexpr TimeLog(std::function<RET(ARGS...)> func,
+                      const char *func_name,
+                      const char *file_name,
+                      const char *args_name,
+                      int line_no)
         : _func(func),
           _func_name(func_name),
           _file_name(file_name),
@@ -100,56 +184,18 @@ public:
     {
     }
     template <typename CLS>
-    TimeLog(RET (CLS::*func)(ARGS...),
-            CLS *obj,
-            const char *func_name,
-            const char *file_name,
-            const char *args_name,
-            int line_no)
+    constexpr TimeLog(RET (CLS::*func)(ARGS...),
+                      CLS *obj,
+                      const char *func_name,
+                      const char *file_name,
+                      const char *args_name,
+                      int line_no)
         : _func_name(func_name),
           _file_name(file_name),
           _args_name(args_name),
           _line_no(line_no)
     {
-        const int argc = sizeof...(ARGS);
-        // TODO: instead of if constexpr, support c++14
-        if constexpr (argc == 0)
-            _func = std::bind(func, obj);
-        else if constexpr (argc == 1)
-            _func = std::bind(func, obj,
-                              std::placeholders::_1);
-        else if constexpr (argc == 2)
-            _func = std::bind(func, obj,
-                              std::placeholders::_1,
-                              std::placeholders::_2);
-        else if constexpr (argc == 3)
-            _func = std::bind(func, obj,
-                              std::placeholders::_1,
-                              std::placeholders::_2,
-                              std::placeholders::_3);
-        else if constexpr (argc == 4)
-            _func = std::bind(func, obj,
-                              std::placeholders::_1,
-                              std::placeholders::_2,
-                              std::placeholders::_3,
-                              std::placeholders::_4);
-        else if constexpr (argc == 5)
-            _func = std::bind(func, obj,
-                              std::placeholders::_1,
-                              std::placeholders::_2,
-                              std::placeholders::_3,
-                              std::placeholders::_4,
-                              std::placeholders::_5);
-        else if constexpr (argc == 6)
-            _func = std::bind(func, obj,
-                              std::placeholders::_1,
-                              std::placeholders::_2,
-                              std::placeholders::_3,
-                              std::placeholders::_4,
-                              std::placeholders::_5,
-                              std::placeholders::_6);
-        else
-            assert(false);
+        _func = makePlaceholders<CLS, RET, ARGS...>(func, obj);
     }
     RET operator()(ARGS... args)
     {
@@ -158,26 +204,7 @@ public:
         SINFO(CE_Debug, CPLE_None, "  [Location]\t%s (%d)", _file_name.c_str(), _line_no);
         try
         {
-            if constexpr (std::is_same<RET, void>::value)
-            {
-                auto start_time = std::chrono::high_resolution_clock::now();
-                _func(args...);
-                std::chrono::duration<double> duration =
-                    std::chrono::high_resolution_clock::now() - start_time;
-                double ms = duration.count() * 1000.0;
-                SINFO(CE_Debug, CPLE_None, "  [Success]\tIt takes %lf ms", ms);
-                return;
-            }
-            else
-            {
-                auto start_time = std::chrono::high_resolution_clock::now();
-                RET result = _func(args...);
-                std::chrono::duration<double> duration =
-                    std::chrono::high_resolution_clock::now() - start_time;
-                double ms = duration.count() * 1000.0;
-                SINFO(CE_Debug, CPLE_None, "  [Success]\tIt takes %lf ms", ms);
-                return result;
-            }
+            return runFunction<RET, ARGS...>(_func, args...);
         }
         catch (const std::exception &ex)
         {

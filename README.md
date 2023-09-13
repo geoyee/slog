@@ -31,24 +31,24 @@ float func(float a, float b)
 示例程序为[sample.cpp](./sample.cpp)，执行输出如下：
 
 ```shell
-~ 2023/09/11 22:39:02
+~ 2023/09/13 17:11:06
   [Function]    get(vec, 2)
-  [Location]    E:\dataFiles\github\slog\sample.cpp (45)
-  [Success]     It takes 12.000000 ms
+  [Location]    /home/chenyizhou/slog/sample.cpp (45)
+  [Success]     It takes 15.139353 ms
 a = 3
-~ 2023/09/11 22:39:02
+~ 2023/09/13 17:11:06
   [Function]    IntVec::init(vec)
-  [Location]    E:\dataFiles\github\slog\sample.cpp (49)
-  [Success]     It takes 0.000000 ms
+  [Location]    /home/chenyizhou/slog/sample.cpp (49)
+  [Success]     It takes 0.001200 ms
 init vec
-~ 2023/09/11 22:39:02
-  [Function]    IntVec::get(7)
-  [Location]    E:\dataFiles\github\slog\sample.cpp (51)
+~ 2023/09/13 17:11:06
+  [Function]    IntVec::get(3, 4)
+  [Location]    /home/chenyizhou/slog/sample.cpp (51)
   [Failure]     vector::_M_range_check: __n (which is 7) >= this->size() (which is 5)
 b = 0
-- 2023/09/11 22:39:02
+- 2023/09/13 17:11:06
   [Function]    get2
-  [Location]    E:\dataFiles\github\slog\sample.cpp (35)
+  [Location]    /home/chenyizhou/slog/sample.cpp (35)
   [Failure]     vector::_M_range_check: __n (which is 18446744073709551614) >= this->size() (which is 5)
 e = -1
 ```

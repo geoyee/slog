@@ -24,9 +24,9 @@ public:
     {
         _vec = vec;
     }
-    int get(int index)
+    int get(int index, int add)
     {
-        return _vec.at(index);
+        return _vec.at(index + add);
     }
 };
 
@@ -48,7 +48,7 @@ int main(int argc, char *argv[])
     IntVec iv;
     SLC6(iv, IntVec::init, vec);
     printf("init vec\n");
-    int d = SLC6(iv, IntVec::get, 7);
+    int d = SLC6(iv, IntVec::get, 3, 4);
     printf("b = %d\n", d);
 
     int e = get2(vec, -2);
