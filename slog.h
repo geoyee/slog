@@ -74,7 +74,7 @@ std::string nowTimeStr()
     return std::string(buffer);
 }
 
-// `if constexpr` is a C++17 feature, so used `std::enable_if_t` instead
+// `if constexpr` is a C++17 feature, so use `std::enable_if_t` instead
 
 template <typename CLS, typename RET, typename... ARGS, std::enable_if_t<sizeof...(ARGS) == 0, int> = 1>
 std::function<RET(ARGS...)> makePlaceholders(RET (CLS::*func)(ARGS...), CLS *obj)
