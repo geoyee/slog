@@ -1,4 +1,4 @@
-#define _SLOG_DEBUG
+#define _ENABLE_SLOG
 
 #include <iostream>
 #include <vector>
@@ -32,27 +32,27 @@ public:
 
 int get2(ints vec, int index)
 {
-    SSF
+    SENTRY
 
-        return vec.at(index);
+    return vec.at(index);
 
-    SEF(-1)
+    SLEAVE(-1)
 };
 
 int main(int argc, char *argv[])
 {
     ints vec = {1, 2, 3, 4, 5};
-    int a = SL(get, vec, 2);
+    int a = SFUNCTION(get, vec, 2);
     printf("a = %d\n", a);
 
     IntVec iv;
-    SLC6(iv, IntVec::init, vec);
+    SCFUNCTION(iv, IntVec::init, vec);
     printf("init vec\n");
-    int d = SLC6(iv, IntVec::get, 3, 4);
-    printf("b = %d\n", d);
+    int c = SCFUNCTION(iv, IntVec::get, 3, 4);
+    printf("c = %d\n", c);
 
-    int e = get2(vec, -2);
-    printf("e = %d\n", e);
+    int d = get2(vec, -2);
+    printf("d = %d\n", d);
 
     return 0;
 }

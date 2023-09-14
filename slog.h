@@ -2,11 +2,13 @@
  @ brief:   A simple log system for C++14
  @ author:  Yizhou Chen
  @ date:    2023-09-13
- @ version: 1.0.0
+ @ version: 1.1.0
  */
 
 #ifndef _SLOG_H_
 #define _SLOG_H_
+
+#pragma warning(disable : 4996) // Disable: 'localtime': This function or variable may be unsafe
 
 #include <iostream>
 #include <string>
@@ -17,6 +19,20 @@
 #include <cassert>
 #include <type_traits>
 #include <utility>
+
+#ifdef CPL_ERROR_H_INCLUDED // Use CPLError
+
+#include <cpl_error.h>
+#define SINFO CPLError
+
+#else // Use custom error
+
+#include <mutex>
+
+static std::mutex oAllMutex;
+
+#define LOCK oAllMutex.lock()
+#define UNLOCK oAllMutex.unlock()
 
 typedef enum
 {
@@ -48,34 +64,33 @@ typedef enum
     CPLE_AWSSignatureDoesNotMatch,
 } CPLErrorNum;
 
-#ifdef CPL_ERROR_H_INCLUDED
-#include <cpl_error.h>
-#define SINFO CPLError
-#else
 #define SINFO(eErrClass, err_no, ...) \
     {                                 \
+        LOCK;                         \
         fprintf(stderr, __VA_ARGS__); \
         fprintf(stderr, "\n");        \
         if (eErrClass == CE_Fatal)    \
             exit(1);                  \
+        UNLOCK;                       \
     }                                 \
     while (0)
-#endif
 
+#endif // CPL_ERROR_H_INCLUDED
+
+// Get current time
 std::string nowTimeStr()
 {
     std::time_t t = std::time(nullptr);
     char buffer[20];
-    std::strftime(
-        buffer,
-        sizeof(buffer),
-        "%Y/%m/%d %H:%M:%S",
-        std::localtime(&t));
+    std::strftime(buffer,
+                  sizeof(buffer),
+                  "%Y/%m/%d %H:%M:%S",
+                  std::localtime(&t));
     return std::string(buffer);
 }
 
-// `if constexpr` is a C++17 feature, so use `std::enable_if_t` instead
-
+// Select placeholders according to the number of arguments
+// In c++17, it can be replaced by if constexpr
 template <typename CLS, typename RET, typename... ARGS, std::enable_if_t<sizeof...(ARGS) == 0, int> = 1>
 std::function<RET(ARGS...)> makePlaceholders(RET (CLS::*func)(ARGS...), CLS *obj)
 {
@@ -133,6 +148,7 @@ std::function<RET(ARGS...)> makePlaceholders(RET (CLS::*func)(ARGS...), CLS *obj
                      std::placeholders::_6);
 }
 
+// Select function according to the return type
 template <typename RET, typename... ARGS, std::enable_if_t<!std::is_same<RET, void>::value, int> = 1>
 RET runFunction(std::function<RET(ARGS...)> func, ARGS... args)
 {
@@ -154,9 +170,10 @@ RET runFunction(std::function<RET(ARGS...)> func, ARGS... args)
         std::chrono::high_resolution_clock::now() - start_time;
     double ms = duration.count() * 1000.0;
     SINFO(CE_Debug, CPLE_None, "  [Success]\tIt takes %lf ms", ms);
-    return RET();
+    return void();
 }
 
+// core class of slog
 template <typename>
 class TimeLog;
 
@@ -219,6 +236,7 @@ public:
     }
 };
 
+// Make slog function
 template <typename RET, typename... ARGS>
 TimeLog<RET(ARGS...)> makeTimeLogFunction(RET (*func)(ARGS...),
                                           const char *func_name,
@@ -249,15 +267,16 @@ TimeLog<RET(ARGS...)> makeTimeLogClassFunction(RET (CLS::*func)(ARGS...),
                                  line_no);
 }
 
-#ifdef _SLOG_DEBUG
-#define SSF                                                                  \
+#ifdef _ENABLE_SLOG
+
+#define SENTRY                                                               \
     SINFO(CE_Debug, CPLE_None, "- %s", nowTimeStr().c_str());                \
     SINFO(CE_Debug, CPLE_None, "  [Function]\t%s", __FUNCTION__);            \
     SINFO(CE_Debug, CPLE_None, "  [Location]\t%s (%d)", __FILE__, __LINE__); \
     try                                                                      \
     {
 
-#define SEF(result)                                                       \
+#define SLEAVE(result)                                                    \
     }                                                                     \
     catch (const std::exception &ex)                                      \
     {                                                                     \
@@ -269,15 +288,21 @@ TimeLog<RET(ARGS...)> makeTimeLogClassFunction(RET (CLS::*func)(ARGS...),
         SINFO(CE_Fatal, CPLE_AppDefined, "  [Fatal]\tUnknown exception"); \
         return result;                                                    \
     }
-#define SL(func, ...) \
+
+#define SFUNCTION(func, ...) \
     makeTimeLogFunction(func, #func, __FILE__, #__VA_ARGS__, __LINE__)(__VA_ARGS__)
-#define SLC6(obj, func, ...) \
+
+#define SCFUNCTION(obj, func, ...) \
     makeTimeLogClassFunction(&func, &obj, #func, __FILE__, #__VA_ARGS__, __LINE__)(__VA_ARGS__)
+
 #else
-#define SSF
-#define SEF(result)
-#define SL(func, ...) func(__VA_ARGS__)
-#define SLC6(obj, func, ...) std::bind(&func, &obj, __VA_ARGS__)()
-#endif // _SLOG_DEBUG
+
+#define SENTRY
+#define SLEAVE(result)
+#define SMTRACE(f) f
+#define SFUNCTION(func, ...) func(__VA_ARGS__)
+#define SCFUNCTION(obj, func, ...) std::bind(&func, &obj, __VA_ARGS__)()
+
+#endif // _ENABLE_SLOG
 
 #endif // _SLOG_H_
