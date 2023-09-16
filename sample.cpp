@@ -55,10 +55,9 @@ int main(int argc, char *argv[])
     double c = SFUNC_MEM_RUN(rv, RealVec::get, 3, 4);
     printf("c = %g\n", c);
 
-    // TODO: bind
-    // auto new_get2 = SFUNC_BIND_DEC(std::bind(&RealVec::get, &rv, std::placeholders::_1));
-    // double d = new_get2(3);
-    // printf("d = %g\n", d);
+    auto new_mem_get = SFUNC_MEM_DEC(rv, RealVec::get);
+    double d = new_mem_get(1, 3);
+    printf("d = %g\n", d);
 
     double e = get2(vec, -2);
     printf("e = %g\n", e);

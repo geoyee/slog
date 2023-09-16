@@ -90,8 +90,8 @@ std::string nowTimeStr()
 }
 
 /*
- @author: Garcia6l20
- @github: https://github.com/Garcia6l20/if_constexpr14
+ @author:   Garcia6l20
+ @refrence: https://github.com/Garcia6l20/if_constexpr14
  */
 namespace ic
 {
@@ -238,6 +238,7 @@ namespace ic
 }
 
 // Return NaN of the different types
+// Add and Update as needed
 template <typename T>
 constexpr T NaN()
 {
@@ -253,46 +254,46 @@ constexpr T NaN()
             { return false; }),
         ic::case_<std::is_same<T, char>::value>(
             []
-            { return std::numeric_limits<char>::quiet_NaN(); }),
+            { return std::numeric_limits<char>::min(); }),
         ic::case_<std::is_same<T, signed char>::value>(
             []
-            { return std::numeric_limits<signed char>::quiet_NaN(); }),
+            { return std::numeric_limits<signed char>::min(); }),
         ic::case_<std::is_same<T, unsigned char>::value>(
             []
-            { return std::numeric_limits<unsigned char>::quiet_NaN(); }),
+            { return std::numeric_limits<unsigned char>::min(); }),
         ic::case_<std::is_same<T, wchar_t>::value>(
             []
-            { return std::numeric_limits<wchar_t>::quiet_NaN(); }),
+            { return std::numeric_limits<wchar_t>::min(); }),
         ic::case_<std::is_same<T, char16_t>::value>(
             []
-            { return std::numeric_limits<char16_t>::quiet_NaN(); }),
+            { return std::numeric_limits<char16_t>::min(); }),
         ic::case_<std::is_same<T, char32_t>::value>(
             []
-            { return std::numeric_limits<char32_t>::quiet_NaN(); }),
+            { return std::numeric_limits<char32_t>::min(); }),
         ic::case_<std::is_same<T, short>::value>(
             []
-            { return std::numeric_limits<short>::quiet_NaN(); }),
+            { return std::numeric_limits<short>::min(); }),
         ic::case_<std::is_same<T, unsigned short>::value>(
             []
-            { return std::numeric_limits<unsigned short>::quiet_NaN(); }),
+            { return std::numeric_limits<unsigned short>::min(); }),
         ic::case_<std::is_same<T, int>::value>(
             []
-            { return std::numeric_limits<int>::quiet_NaN(); }),
+            { return std::numeric_limits<int>::min(); }),
         ic::case_<std::is_same<T, unsigned int>::value>(
             []
-            { return std::numeric_limits<unsigned int>::quiet_NaN(); }),
+            { return std::numeric_limits<unsigned int>::min(); }),
         ic::case_<std::is_same<T, long>::value>(
             []
-            { return std::numeric_limits<long>::quiet_NaN(); }),
+            { return std::numeric_limits<long>::min(); }),
         ic::case_<std::is_same<T, unsigned long>::value>(
             []
-            { return std::numeric_limits<unsigned long>::quiet_NaN(); }),
+            { return std::numeric_limits<unsigned long>::min(); }),
         ic::case_<std::is_same<T, long long>::value>(
             []
-            { return std::numeric_limits<long long>::quiet_NaN(); }),
+            { return std::numeric_limits<long long>::min(); }),
         ic::case_<std::is_same<T, unsigned long long>::value>(
             []
-            { return std::numeric_limits<unsigned long long>::quiet_NaN(); }),
+            { return std::numeric_limits<unsigned long long>::min(); }),
         ic::case_<std::is_same<T, float>::value>(
             []
             { return std::numeric_limits<float>::quiet_NaN(); }),
@@ -456,11 +457,11 @@ public:
 
 // Make slog function
 template <typename RET, typename... ARGS>
-TimeLog<RET(ARGS...)> makeTimeLogFunction(RET (*func)(ARGS...),
-                                          const char *func_name,
-                                          const char *file_name,
-                                          const char *args_name,
-                                          int line_no)
+constexpr TimeLog<RET(ARGS...)> makeTimeLogFunction(RET (*func)(ARGS...),
+                                                    const char *func_name,
+                                                    const char *file_name,
+                                                    const char *args_name,
+                                                    int line_no)
 {
     return TimeLog<RET(ARGS...)>(std::function<RET(ARGS...)>(func),
                                  func_name,
@@ -470,12 +471,12 @@ TimeLog<RET(ARGS...)> makeTimeLogFunction(RET (*func)(ARGS...),
 }
 
 template <typename RET, typename CLS, typename... ARGS>
-TimeLog<RET(ARGS...)> makeTimeLogMemberFunction(RET (CLS::*func)(ARGS...),
-                                                CLS *obj,
-                                                const char *func_name,
-                                                const char *file_name,
-                                                const char *args_name,
-                                                int line_no)
+constexpr TimeLog<RET(ARGS...)> makeTimeLogMemberFunction(RET (CLS::*func)(ARGS...),
+                                                          CLS *obj,
+                                                          const char *func_name,
+                                                          const char *file_name,
+                                                          const char *args_name,
+                                                          int line_no)
 {
     return TimeLog<RET(ARGS...)>(func,
                                  obj,
@@ -486,10 +487,10 @@ TimeLog<RET(ARGS...)> makeTimeLogMemberFunction(RET (CLS::*func)(ARGS...),
 }
 
 template <typename RET, typename... ARGS>
-auto decorateFunction(RET (*func)(ARGS...),
-                      const char *func_name,
-                      const char *file_name,
-                      int line_no)
+constexpr auto decorateFunction(RET (*func)(ARGS...),
+                                const char *func_name,
+                                const char *file_name,
+                                int line_no)
 {
     return [=](ARGS... args) -> RET
     {
@@ -497,21 +498,18 @@ auto decorateFunction(RET (*func)(ARGS...),
     };
 }
 
-// TODO: bind
-// template <typename F>
-// auto decorateFunctionBind(const F &func,
-//                           const char *func_name,
-//                           const char *file_name,
-//                           int line_no)
-// {
-//     return [=](auto &&...args)
-//                -> optional_type<decltype(func(std::forward<decltype(args)>(args)...))>
-//     {
-//         using RET = optional_type<decltype(func(std::forward<decltype(args)>(args)...))>;
-//         auto new_func = RET(func(std::forward<decltype(args)>(args)...));
-//         return makeTimeLogFunction(new_func, func_name, file_name, "...", line_no)(args...);
-//     };
-// }
+template <typename RET, typename CLS, typename... ARGS>
+constexpr auto decorateMemberFunction(RET (CLS::*func)(ARGS...),
+                                      CLS *obj,
+                                      const char *func_name,
+                                      const char *file_name,
+                                      int line_no)
+{
+    return [=](ARGS... args) -> RET
+    {
+        return makeTimeLogMemberFunction(func, obj, func_name, file_name, "...", line_no)(args...);
+    };
+}
 
 #ifdef _ENABLE_SLOG
 
@@ -537,7 +535,7 @@ auto decorateFunction(RET (*func)(ARGS...),
 
 #define SFUNC_DEC(func) decorateFunction(&func, #func, __FILE__, __LINE__)
 
-// #define SFUNC_BIND_DEC(func) decorateFunctionBind(&func, #func, __FILE__, __LINE__)
+#define SFUNC_MEM_DEC(obj, func) decorateMemberFunction(&func, &obj, #func, __FILE__, __LINE__)
 
 #define SFUNC_RUN(func, ...) \
     makeTimeLogFunction(func, #func, __FILE__, #__VA_ARGS__, __LINE__)(__VA_ARGS__)
@@ -550,7 +548,7 @@ auto decorateFunction(RET (*func)(ARGS...),
 #define SENTRY
 #define SLEAVE(result)
 #define SFUNC_DEC(func) func
-// #define SFUNC_BIND_DEC(func) func
+#define SFUNC_BIND_DEC(func) func
 #define SFUNC_RUN(func, ...) func(__VA_ARGS__)
 #define SFUNC_MEM_RUN(obj, func, ...) std::bind(&func, &obj, __VA_ARGS__)()
 
