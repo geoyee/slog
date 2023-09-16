@@ -493,7 +493,7 @@ auto decorateFunction(RET (*func)(ARGS...),
 {
     return [=](ARGS... args) -> RET
     {
-        return makeTimeLogFunction(func, func_name, file_name, "", line_no)(args...);
+        return makeTimeLogFunction(func, func_name, file_name, "...", line_no)(args...);
     };
 }
 
@@ -509,7 +509,7 @@ auto decorateFunction(RET (*func)(ARGS...),
 //     {
 //         using RET = optional_type<decltype(func(std::forward<decltype(args)>(args)...))>;
 //         auto new_func = RET(func(std::forward<decltype(args)>(args)...));
-//         return makeTimeLogFunction(new_func, func_name, file_name, "", line_no)(args...);
+//         return makeTimeLogFunction(new_func, func_name, file_name, "...", line_no)(args...);
 //     };
 // }
 

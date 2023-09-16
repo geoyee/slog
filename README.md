@@ -18,8 +18,9 @@ int b = new_func(vec, a);
 /* 装饰成员函数，使用bind */
 // Class cls
 // cls.func(a, b, c);
-new_func = SFUNC_BIND_DEC(std::bind(&Class::func, &cls, std::placeholders::_1, std::placeholders::_2));
-new_func(a, b);
+// auto new_func = SFUNC_BIND_DEC(
+//   std::bind(&Class::func, &cls, std::placeholders::_1, std::placeholders::_2));
+// new_func(a, b);
 
 /* 运行函数 */
 // int b = func(vec, a);
@@ -50,7 +51,7 @@ float func(float a, float b)
   [Success]     It takes 13.000000 ms
 a = -3.14
 ~ 2023/09/16 11:06:31
-  [Function]    get()
+  [Function]    get(...)
   [Location]    E:\slog\sample.cpp (48)
   [Failure]     vector::_M_range_check: __n (which is 20) >= this->size() (which is 5)
 b = nan
