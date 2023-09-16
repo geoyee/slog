@@ -10,16 +10,27 @@
 #define _ENABLE_SLOG
 #include "slog.h"
 
-/* 普通函数 */
+/* 装饰函数 */
 // int b = func(vec, a);
-int b = SFUNCTION(func, vec, a);
+auto new_func = SFUNC_DEC(func);
+int b = new_func(vec, a);
 
-/* 成员函数 */
+/* 装饰成员函数，使用bind */
 // Class cls
 // cls.func(a, b, c);
-SCFUNCTION(cls, Class::func, a, b, c);
+new_func = SFUNC_BIND_DEC(std::bind(&Class::func, &cls, std::placeholders::_1, std::placeholders::_2));
+new_func(a, b);
 
-/* 在函数中 */
+/* 运行函数 */
+// int b = func(vec, a);
+int b = SFUNC_RUN(func, vec, a);
+
+/* 运行成员函数 */
+// Class cls
+// cls.func(a, b, c);
+SFUNC_MEM_RUN(cls, Class::func, a, b);
+
+/* 写在函数中 */
 float func(float a, float b)
 {
   SENTRY
@@ -33,24 +44,34 @@ float func(float a, float b)
 示例程序为[sample.cpp](./sample.cpp)，执行输出如下：
 
 ```shell
-~ 2023/09/14 21:59:51
+~ 2023/09/16 11:06:31
   [Function]    get(vec, 2)
-  [Location]    \home\slog\sample.cpp (45)
-  [Success]     It takes 18.142000 ms
-a = 3
-~ 2023/09/14 21:59:51
-  [Function]    IntVec::init(vec)
-  [Location]    \home\slog\sample.cpp (49)
+  [Location]    E:\slog\sample.cpp (45)
+  [Success]     It takes 13.000000 ms
+a = -3.14
+~ 2023/09/16 11:06:31
+  [Function]    get()
+  [Location]    E:\slog\sample.cpp (48)
+  [Failure]     vector::_M_range_check: __n (which is 20) >= this->size() (which is 5)
+b = nan
+~ 2023/09/16 11:06:31
+  [Function]    RealVec::init(vec)
+  [Location]    E:\slog\sample.cpp (53)
   [Success]     It takes 0.000000 ms
 init vec
-~ 2023/09/14 21:59:51
-  [Function]    IntVec::get(3, 4)
-  [Location]    \home\slog\sample.cpp (51)
+~ 2023/09/16 11:06:31
+  [Function]    RealVec::get(3, 4)
+  [Location]    E:\slog\sample.cpp (55)
   [Failure]     vector::_M_range_check: __n (which is 7) >= this->size() (which is 5)
-c = 0
-- 2023/09/14 21:59:51
+c = nan
+- 2023/09/16 11:06:31
   [Function]    get2
-  [Location]    \home\slog\sample.cpp (35)
+  [Location]    E:\slog\sample.cpp (35)
   [Failure]     vector::_M_range_check: __n (which is 18446744073709551614) >= this->size() (which is 5)
-d = -1
+e = nan
 ```
+
+## 参考
+
+1. [\*GDAL\CPL](https://github.com/OSGeo/gdal/tree/master/port)
+2. [if_constexpr14](https://github.com/Garcia6l20/if_constexpr14)

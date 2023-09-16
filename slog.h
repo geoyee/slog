@@ -1,8 +1,8 @@
 /*
  @ brief:   A simple log system for C++14
  @ author:  Yizhou Chen
- @ date:    2023-09-13
- @ version: 1.1.0
+ @ date:    2023-09-16
+ @ version: 1.2.0
  */
 
 #ifndef _SLOG_H_
@@ -31,8 +31,8 @@
 
 static std::mutex oAllMutex;
 
-#define LOCK oAllMutex.lock()
-#define UNLOCK oAllMutex.unlock()
+#define SLOCK oAllMutex.lock()
+#define SUNLOCK oAllMutex.unlock()
 
 typedef enum
 {
@@ -66,12 +66,12 @@ typedef enum
 
 #define SINFO(eErrClass, err_no, ...) \
     {                                 \
-        LOCK;                         \
+        SLOCK;                        \
         fprintf(stderr, __VA_ARGS__); \
         fprintf(stderr, "\n");        \
         if (eErrClass == CE_Fatal)    \
             exit(1);                  \
-        UNLOCK;                       \
+        SUNLOCK;                      \
     }                                 \
     while (0)
 
@@ -87,6 +87,224 @@ std::string nowTimeStr()
                   "%Y/%m/%d %H:%M:%S",
                   std::localtime(&t));
     return std::string(buffer);
+}
+
+/*
+ @author: Garcia6l20
+ @github: https://github.com/Garcia6l20/if_constexpr14
+ */
+namespace ic
+{
+    namespace detail
+    {
+        template <bool result, typename TrueT, typename FalseT = std::nullptr_t>
+        struct if_constexpr
+        {
+            TrueT true_;
+            FalseT false_;
+
+            constexpr explicit if_constexpr(TrueT trueT, FalseT falseT = nullptr)
+                : true_{std::move(trueT)}, false_{std::move(falseT)} {}
+
+            template <bool check = result, std::enable_if_t<check, int> = 0>
+            constexpr auto operator()()
+            {
+                return true_();
+            }
+
+            template <bool check = result,
+                      std::enable_if_t<!check && !std::is_same<FalseT, std::nullptr_t>::value, int> = 0>
+            constexpr auto operator()()
+            {
+                return false_();
+            }
+
+            template <bool check = result,
+                      std::enable_if_t<!check && std::is_same<FalseT, std::nullptr_t>::value, int> = 0>
+            constexpr void operator()() {}
+        };
+
+        template <typename ThenT>
+        struct else_
+        {
+            ThenT then_;
+            constexpr explicit else_(ThenT then)
+                : then_{std::move(then)} {}
+        };
+
+        template <class T, template <class...> class Template>
+        struct is_specialization : std::false_type
+        {
+        };
+
+        template <template <class...> class Template, class... Args>
+        struct is_specialization<Template<Args...>, Template> : std::true_type
+        {
+        };
+
+        template <bool result, typename CaseT>
+        struct case_constexpr
+        {
+            static constexpr bool value = result;
+            CaseT case_;
+            constexpr explicit case_constexpr(CaseT &&case_)
+                : case_{std::move(case_)} {}
+            constexpr auto operator()()
+            {
+                return case_();
+            }
+        };
+    }
+
+    template <bool result, typename TrueT, typename ElseT,
+              std::enable_if_t<detail::is_specialization<ElseT, detail::else_>::value, int> = 0>
+    constexpr auto if_(TrueT &&trueT, ElseT &&else_)
+    {
+        return detail::if_constexpr<result, TrueT, decltype(else_.then_)>(
+            std::forward<TrueT>(trueT), std::move(else_.then_))();
+    }
+
+    template <bool result, typename TrueT, typename ElseT,
+              std::enable_if_t<!detail::is_specialization<ElseT, detail::else_>::value, int> = 0>
+    constexpr auto if_(TrueT &&trueT, ElseT &&else_)
+    {
+        auto fwd = [else_ = std::forward<decltype(else_)>(else_)]() mutable
+        {
+            return else_();
+        };
+        return detail::if_constexpr<result, TrueT, decltype(fwd)>(
+            std::forward<TrueT>(trueT), std::move(fwd))();
+    }
+
+    template <bool result, typename TrueT, typename ElseT>
+    constexpr auto else_if_(TrueT &&trueT, ElseT &&else_)
+    {
+        return detail::if_constexpr<result, TrueT, decltype(else_.then_)>(
+            std::forward<TrueT>(trueT), std::move(else_.then_));
+    }
+
+    template <bool result, typename TrueT>
+    constexpr auto else_if_(TrueT &&trueT)
+    {
+        auto nop = [] {};
+        return detail::if_constexpr<result, TrueT, decltype(nop)>(
+            std::forward<TrueT>(trueT), std::move(nop));
+    }
+
+    template <typename ThenT>
+    constexpr auto else_(ThenT &&then)
+    {
+        return detail::else_<ThenT>(std::forward<ThenT>(then));
+    }
+
+    template <bool result, typename CaseT>
+    constexpr auto case_(CaseT &&case_)
+    {
+        return detail::case_constexpr<result, CaseT>{std::forward<CaseT>(case_)};
+    }
+
+    template <typename DefaultT>
+    constexpr auto default_(DefaultT &&default_)
+    {
+        return detail::case_constexpr<true, DefaultT>{std::forward<DefaultT>(default_)};
+    }
+
+    template <typename LastT,
+              std::enable_if_t<LastT::value, int> = 0>
+    constexpr auto switch_(LastT &&last)
+    {
+        return last();
+    }
+
+    template <typename LastT,
+              std::enable_if_t<!LastT::value, int> = 0>
+    constexpr auto switch_(LastT &&last)
+    {
+    }
+
+    template <typename FirstT, typename... CasesT,
+              std::enable_if_t<FirstT::value, int> = 0>
+    constexpr auto switch_(FirstT &&first, CasesT &&...cases)
+    {
+        return first();
+    }
+
+    template <typename FirstT, typename... CasesT,
+              std::enable_if_t<!FirstT::value, int> = 0>
+    constexpr auto switch_(FirstT &&first, CasesT &&...cases)
+    {
+        return switch_<CasesT...>(std::forward<CasesT>(cases)...);
+    }
+}
+
+// Return NaN of the different types
+template <typename T>
+constexpr T NaN()
+{
+    return ic::switch_(
+        ic::case_<std::is_pointer<T>::value>(
+            []
+            { return nullptr; }),
+        ic::case_<std::is_same<T, CPLErr>::value>(
+            []
+            { return CE_Failure; }),
+        ic::case_<std::is_same<T, bool>::value>(
+            []
+            { return false; }),
+        ic::case_<std::is_same<T, char>::value>(
+            []
+            { return std::numeric_limits<char>::quiet_NaN(); }),
+        ic::case_<std::is_same<T, signed char>::value>(
+            []
+            { return std::numeric_limits<signed char>::quiet_NaN(); }),
+        ic::case_<std::is_same<T, unsigned char>::value>(
+            []
+            { return std::numeric_limits<unsigned char>::quiet_NaN(); }),
+        ic::case_<std::is_same<T, wchar_t>::value>(
+            []
+            { return std::numeric_limits<wchar_t>::quiet_NaN(); }),
+        ic::case_<std::is_same<T, char16_t>::value>(
+            []
+            { return std::numeric_limits<char16_t>::quiet_NaN(); }),
+        ic::case_<std::is_same<T, char32_t>::value>(
+            []
+            { return std::numeric_limits<char32_t>::quiet_NaN(); }),
+        ic::case_<std::is_same<T, short>::value>(
+            []
+            { return std::numeric_limits<short>::quiet_NaN(); }),
+        ic::case_<std::is_same<T, unsigned short>::value>(
+            []
+            { return std::numeric_limits<unsigned short>::quiet_NaN(); }),
+        ic::case_<std::is_same<T, int>::value>(
+            []
+            { return std::numeric_limits<int>::quiet_NaN(); }),
+        ic::case_<std::is_same<T, unsigned int>::value>(
+            []
+            { return std::numeric_limits<unsigned int>::quiet_NaN(); }),
+        ic::case_<std::is_same<T, long>::value>(
+            []
+            { return std::numeric_limits<long>::quiet_NaN(); }),
+        ic::case_<std::is_same<T, unsigned long>::value>(
+            []
+            { return std::numeric_limits<unsigned long>::quiet_NaN(); }),
+        ic::case_<std::is_same<T, long long>::value>(
+            []
+            { return std::numeric_limits<long long>::quiet_NaN(); }),
+        ic::case_<std::is_same<T, unsigned long long>::value>(
+            []
+            { return std::numeric_limits<unsigned long long>::quiet_NaN(); }),
+        ic::case_<std::is_same<T, float>::value>(
+            []
+            { return std::numeric_limits<float>::quiet_NaN(); }),
+        ic::case_<std::is_same<T, double>::value>(
+            []
+            { return std::numeric_limits<double>::quiet_NaN(); }),
+        ic::case_<std::is_same<T, long double>::value>(
+            []
+            { return std::numeric_limits<long double>::quiet_NaN(); }),
+        ic::default_(
+            []
+            { return T(); }));
 }
 
 // Select placeholders according to the number of arguments
@@ -226,12 +444,12 @@ public:
         catch (const std::exception &ex)
         {
             SINFO(CE_Failure, CPLE_AppDefined, "  [Failure]\t%s", ex.what());
-            return RET();
+            return NaN<RET>();
         }
         catch (...)
         {
             SINFO(CE_Fatal, CPLE_AppDefined, "  [Fatal]\tUnknown exception");
-            return RET();
+            return NaN<RET>();
         }
     }
 };
@@ -252,12 +470,12 @@ TimeLog<RET(ARGS...)> makeTimeLogFunction(RET (*func)(ARGS...),
 }
 
 template <typename RET, typename CLS, typename... ARGS>
-TimeLog<RET(ARGS...)> makeTimeLogClassFunction(RET (CLS::*func)(ARGS...),
-                                               CLS *obj,
-                                               const char *func_name,
-                                               const char *file_name,
-                                               const char *args_name,
-                                               int line_no)
+TimeLog<RET(ARGS...)> makeTimeLogMemberFunction(RET (CLS::*func)(ARGS...),
+                                                CLS *obj,
+                                                const char *func_name,
+                                                const char *file_name,
+                                                const char *args_name,
+                                                int line_no)
 {
     return TimeLog<RET(ARGS...)>(func,
                                  obj,
@@ -266,6 +484,34 @@ TimeLog<RET(ARGS...)> makeTimeLogClassFunction(RET (CLS::*func)(ARGS...),
                                  args_name,
                                  line_no);
 }
+
+template <typename RET, typename... ARGS>
+auto decorateFunction(RET (*func)(ARGS...),
+                      const char *func_name,
+                      const char *file_name,
+                      int line_no)
+{
+    return [=](ARGS... args) -> RET
+    {
+        return makeTimeLogFunction(func, func_name, file_name, "", line_no)(args...);
+    };
+}
+
+// TODO: bind
+// template <typename F>
+// auto decorateFunctionBind(const F &func,
+//                           const char *func_name,
+//                           const char *file_name,
+//                           int line_no)
+// {
+//     return [=](auto &&...args)
+//                -> optional_type<decltype(func(std::forward<decltype(args)>(args)...))>
+//     {
+//         using RET = optional_type<decltype(func(std::forward<decltype(args)>(args)...))>;
+//         auto new_func = RET(func(std::forward<decltype(args)>(args)...));
+//         return makeTimeLogFunction(new_func, func_name, file_name, "", line_no)(args...);
+//     };
+// }
 
 #ifdef _ENABLE_SLOG
 
@@ -289,19 +535,24 @@ TimeLog<RET(ARGS...)> makeTimeLogClassFunction(RET (CLS::*func)(ARGS...),
         return result;                                                    \
     }
 
-#define SFUNCTION(func, ...) \
+#define SFUNC_DEC(func) decorateFunction(&func, #func, __FILE__, __LINE__)
+
+// #define SFUNC_BIND_DEC(func) decorateFunctionBind(&func, #func, __FILE__, __LINE__)
+
+#define SFUNC_RUN(func, ...) \
     makeTimeLogFunction(func, #func, __FILE__, #__VA_ARGS__, __LINE__)(__VA_ARGS__)
 
-#define SCFUNCTION(obj, func, ...) \
-    makeTimeLogClassFunction(&func, &obj, #func, __FILE__, #__VA_ARGS__, __LINE__)(__VA_ARGS__)
+#define SFUNC_MEM_RUN(obj, func, ...) \
+    makeTimeLogMemberFunction(&func, &obj, #func, __FILE__, #__VA_ARGS__, __LINE__)(__VA_ARGS__)
 
 #else
 
 #define SENTRY
 #define SLEAVE(result)
-#define SMTRACE(f) f
-#define SFUNCTION(func, ...) func(__VA_ARGS__)
-#define SCFUNCTION(obj, func, ...) std::bind(&func, &obj, __VA_ARGS__)()
+#define SFUNC_DEC(func) func
+// #define SFUNC_BIND_DEC(func) func
+#define SFUNC_RUN(func, ...) func(__VA_ARGS__)
+#define SFUNC_MEM_RUN(obj, func, ...) std::bind(&func, &obj, __VA_ARGS__)()
 
 #endif // _ENABLE_SLOG
 

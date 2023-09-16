@@ -4,55 +4,64 @@
 #include <vector>
 #include "slog.h"
 
-using ints = std::vector<int>;
+using reals = std::vector<double>;
 
-int get(ints vec, int index)
+double get(reals vec, int index)
 {
     for (int i = 0; i < 10000000; ++i)
         ;
     return vec.at(index);
 }
 
-class IntVec
+class RealVec
 {
 private:
-    ints _vec;
+    reals _vec;
 
 public:
-    IntVec() {}
-    void init(ints vec)
+    RealVec() {}
+    void init(reals vec)
     {
         _vec = vec;
     }
-    int get(int index, int add)
+    double get(int index, int add)
     {
         return _vec.at(index + add);
     }
 };
 
-int get2(ints vec, int index)
+double get2(reals vec, int index)
 {
     SENTRY
 
     return vec.at(index);
 
-    SLEAVE(-1)
+    SLEAVE(std::numeric_limits<double>::quiet_NaN())
 };
 
 int main(int argc, char *argv[])
 {
-    ints vec = {1, 2, 3, 4, 5};
-    int a = SFUNCTION(get, vec, 2);
-    printf("a = %d\n", a);
+    reals vec = {1.52, 2.33, -3.14, 0.44, 90.18};
+    double a = SFUNC_RUN(get, vec, 2);
+    printf("a = %g\n", a);
 
-    IntVec iv;
-    SCFUNCTION(iv, IntVec::init, vec);
+    auto new_get = SFUNC_DEC(get);
+    double b = new_get(vec, 20);
+    printf("b = %g\n", b);
+
+    RealVec rv;
+    SFUNC_MEM_RUN(rv, RealVec::init, vec);
     printf("init vec\n");
-    int c = SCFUNCTION(iv, IntVec::get, 3, 4);
-    printf("c = %d\n", c);
+    double c = SFUNC_MEM_RUN(rv, RealVec::get, 3, 4);
+    printf("c = %g\n", c);
 
-    int d = get2(vec, -2);
-    printf("d = %d\n", d);
+    // TODO: bind
+    // auto new_get2 = SFUNC_BIND_DEC(std::bind(&RealVec::get, &rv, std::placeholders::_1));
+    // double d = new_get2(3);
+    // printf("d = %g\n", d);
+
+    double e = get2(vec, -2);
+    printf("e = %g\n", e);
 
     return 0;
 }
