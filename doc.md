@@ -103,7 +103,7 @@ func(d);
 ```cpp
 double func(double *d)
 {
-    VALIDATE_ARGUMENT1(d, "func", 0.0);
+    VALIDATE_ARGUMENT1(d, "func", 0.5);
     ...
 }
 
@@ -119,7 +119,7 @@ std::cout << "r = " << r << std::endl;
   [Function]  func
   [Location]  slog/test/test.cpp (10)
   [Failure]   Argument 'd' is NaN
-r = 0
+r = 0.5
 ```
 
 ### SENTRY & SLEAVE
@@ -164,7 +164,7 @@ r = 233
 
 `SFUNC_DEC(func)`
 
-宏函数，用于对普通函数进行装饰，为该函数增加异常捕获和打印相关信息的功能。
+宏函数，用于对普通函数进行装饰，为该函数增加异常捕获和打印相关信息的功能。当函数有返回值时，如果函数执行失败，则返回该返回值类型对应的`NaN`。
 
 返回值：`std::function`
 
@@ -183,6 +183,7 @@ int func(int i)
 
 auto new_func = SFUNC_DEC(func);
 int r = new_func(-1);
+std::cout << "r = " << r << std::endl;
 ```
 
 输出：
@@ -192,13 +193,14 @@ int r = new_func(-1);
   [Function]  func(...)
   [Location]  slog/test/test.cpp (10)
   [Failure]   vector::_M_range_check: __n (which is 18446744073709551614) >= this->size() (which is 5)
+r = -2147483648
 ```
 
 ### SFUNC_MEM_DEC
 
 `SFUNC_MEM_DEC(obj, func)`
 
-宏函数，用于对成员函数进行装饰，为该成员函数增加异常捕获和打印相关信息的功能。
+宏函数，用于对成员函数进行装饰，为该成员函数增加异常捕获和打印相关信息的功能。当函数有返回值时，如果函数执行失败，则返回该返回值类型对应的`NaN`。
 
 返回值：`std::function`
 
@@ -223,6 +225,7 @@ public:
 A *a = new A();
 auto new_func = SFUNC_MEM_DEC(a, A::func);
 int r = new_func(-1);
+std::cout << "r = " << r << std::endl;
 ```
 
 输出：
@@ -232,13 +235,14 @@ int r = new_func(-1);
   [Function]  A::func(...)
   [Location]  slog/test/test.cpp (10)
   [Failure]   vector::_M_range_check: __n (which is 18446744073709551614) >= this->size() (which is 5)
+r = -2147483648
 ```
 
 ### SFUNC_RUN
 
 `SFUNC_RUN(func, ...)`
 
-宏函数，与`SFUNC_DEC`相似，用于运行普通函数，为普通函数增加进行异常捕获，并打印相关信息等功能。
+宏函数，与`SFUNC_DEC`相似，用于运行普通函数，为普通函数增加进行异常捕获，并打印相关信息等功能。当函数有返回值时，如果函数执行失败，则返回该返回值类型对应的`NaN`。
 
 返回值：与`func`返回值相同
 
@@ -257,6 +261,7 @@ int func(int i)
 }
 
 int r = SFUNC_RUN(func, -1);
+std::cout << "r = " << r << std::endl;
 ```
 
 输出：
@@ -266,13 +271,14 @@ int r = SFUNC_RUN(func, -1);
   [Function]  func(-1)
   [Location]  slog/test/test.cpp (10)
   [Failure]   vector::_M_range_check: __n (which is 18446744073709551614) >= this->size() (which is 5)
+r = -2147483648
 ```
 
 ### SFUNC_MEM_RUN
 
 `SFUNC_MEM_RUN(obj, func, ...)`
 
-宏函数，与`SFUNC_MEM_DEC`相似，用于运行成员函数，为成员函数增加进行异常捕获，并打印相关信息等功能。
+宏函数，与`SFUNC_MEM_DEC`相似，用于运行成员函数，为成员函数增加进行异常捕获，并打印相关信息等功能。当函数有返回值时，如果函数执行失败，则返回该返回值类型对应的`NaN`。
 
 返回值：与`obj.func`返回值相同
 
@@ -297,6 +303,7 @@ public:
 
 A *a = new A();
 int r = SFUNC_MEM_RUN(a, A::func, -1);
+std::cout << "r = " << r << std::endl;
 ```
 
 输出：
@@ -306,6 +313,7 @@ int r = SFUNC_MEM_RUN(a, A::func, -1);
   [Function]  A::func(-1)
   [Location]  slog/test/test.cpp (10)
   [Failure]   vector::_M_range_check: __n (which is 18446744073709551614) >= this->size() (which is 5)
+r = -2147483648
 ```
 
 ### \_ENABLE_SLOG
