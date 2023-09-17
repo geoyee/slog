@@ -222,7 +222,7 @@ public:
     }
 };
 
-A *a = new A();
+A a;
 auto new_func = SFUNC_MEM_DEC(a, A::func);
 int r = new_func(-1);
 std::cout << "r = " << r << std::endl;
@@ -302,7 +302,7 @@ public:
 };
 
 A *a = new A();
-int r = SFUNC_MEM_RUN(a, A::func, -1);
+int r = SFUNC_MEM_RUN(*a, A::func, -1);
 std::cout << "r = " << r << std::endl;
 ```
 
