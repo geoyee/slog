@@ -188,8 +188,8 @@ int r = new_func(-1);
 输出：
 
 ```
-- [2020-12-30 16:00:00]
-  [Function] func
+~ [2020-12-30 16:00:00]
+  [Function] func(...)
   [Location] slog/test/test.cpp (10)
   [Failure]  vector::_M_range_check: __n (which is 18446744073709551614) >= this->size() (which is 5)
 ```
@@ -228,8 +228,8 @@ int r = new_func(-1);
 输出：
 
 ```
-- [2020-12-30 16:00:00]
-  [Function] A::func
+~ [2020-12-30 16:00:00]
+  [Function] A::func(...)
   [Location] slog/test/test.cpp (10)
   [Failure]  vector::_M_range_check: __n (which is 18446744073709551614) >= this->size() (which is 5)
 ```
@@ -262,8 +262,8 @@ int r = SFUNC_RUN(func, -1);
 输出：
 
 ```
-- [2020-12-30 16:00:00]
-  [Function] func
+~ [2020-12-30 16:00:00]
+  [Function] func(-1)
   [Location] slog/test/test.cpp (10)
   [Failure]  vector::_M_range_check: __n (which is 18446744073709551614) >= this->size() (which is 5)
 ```
@@ -302,8 +302,8 @@ int r = SFUNC_MEM_RUN(a, A::func, -1);
 输出：
 
 ```
-- [2020-12-30 16:00:00]
-  [Function] A::func
+~ [2020-12-30 16:00:00]
+  [Function] A::func(-1)
   [Location] slog/test/test.cpp (10)
   [Failure]  vector::_M_range_check: __n (which is 18446744073709551614) >= this->size() (which is 5)
 ```
