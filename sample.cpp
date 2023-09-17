@@ -39,6 +39,14 @@ double get2(reals vec, int index)
     SLEAVE(std::numeric_limits<double>::quiet_NaN())
 };
 
+void change(int *a, int b)
+{
+    VALIDATE_ARGUMENT0(a, __FUNCTION__);
+    VALIDATE_ARGUMENT0(b, __FUNCTION__);
+
+    *a = b;
+};
+
 int main(int argc, char *argv[])
 {
     reals vec = {1.52, 2.33, -3.14, 0.44, 90.18};
@@ -61,6 +69,9 @@ int main(int argc, char *argv[])
 
     double e = get2(vec, -2);
     printf("e = %g\n", e);
+
+    int *f = nullptr;
+    change(f, 3);
 
     return 0;
 }

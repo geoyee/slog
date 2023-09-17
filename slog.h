@@ -1,7 +1,7 @@
 /*
  @ brief:   A simple log system for C++14
  @ author:  Yizhou Chen
- @ date:    2023-09-16
+ @ date:    2023-09-17
  @ version: 1.2.0
  */
 
@@ -90,8 +90,8 @@ std::string nowTimeStr()
 }
 
 /*
- @author:   Garcia6l20
- @refrence: https://github.com/Garcia6l20/if_constexpr14
+ @ author:   Garcia6l20
+ @ refrence: https://github.com/Garcia6l20/if_constexpr14
  */
 namespace ic
 {
@@ -511,6 +511,34 @@ constexpr auto decorateMemberFunction(RET (CLS::*func)(ARGS...),
     };
 }
 
+#define VALIDATE_ARGUMENT0(arg, func)                                                \
+    do                                                                               \
+    {                                                                                \
+        if (arg == NaN<decltype(arg)>())                                             \
+        {                                                                            \
+            SINFO(CE_Debug, CPLE_None, "- %s", nowTimeStr().c_str());                \
+            SINFO(CE_Debug, CPLE_None, "  [Function]\t%s", func);                    \
+            SINFO(CE_Debug, CPLE_None, "  [Location]\t%s (%d)", __FILE__, __LINE__); \
+            SINFO(CE_Failure, CPLE_NotSupported,                                     \
+                  "  [Failure]\tArgument \'%s\' is NaN", #arg);                      \
+            return;                                                                  \
+        }                                                                            \
+    } while (0)
+
+#define VALIDATE_ARGUMENT1(arg, func, ret)                                           \
+    do                                                                               \
+    {                                                                                \
+        if (arg == NaN<decltype(arg)>())                                             \
+        {                                                                            \
+            SINFO(CE_Debug, CPLE_None, "- %s", nowTimeStr().c_str());                \
+            SINFO(CE_Debug, CPLE_None, "  [Function]\t%s", func);                    \
+            SINFO(CE_Debug, CPLE_None, "  [Location]\t%s (%d)", __FILE__, __LINE__); \
+            SINFO(CE_Failure, CPLE_NotSupported,                                     \
+                  "  [Failure]\tArgument \'%s\' is NaN", #arg);                      \
+            return ret;                                                              \
+        }                                                                            \
+    } while (0)
+
 #ifdef _ENABLE_SLOG
 
 #define SENTRY                                                               \
@@ -520,17 +548,17 @@ constexpr auto decorateMemberFunction(RET (CLS::*func)(ARGS...),
     try                                                                      \
     {
 
-#define SLEAVE(result)                                                    \
+#define SLEAVE(ret)                                                       \
     }                                                                     \
     catch (const std::exception &ex)                                      \
     {                                                                     \
         SINFO(CE_Failure, CPLE_AppDefined, "  [Failure]\t%s", ex.what()); \
-        return result;                                                    \
+        return ret;                                                       \
     }                                                                     \
     catch (...)                                                           \
     {                                                                     \
         SINFO(CE_Fatal, CPLE_AppDefined, "  [Fatal]\tUnknown exception"); \
-        return result;                                                    \
+        return ret;                                                       \
     }
 
 #define SFUNC_DEC(func) decorateFunction(&func, #func, __FILE__, __LINE__)
