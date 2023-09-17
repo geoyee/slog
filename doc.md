@@ -1,6 +1,6 @@
-## 使用文档
+# 使用文档
 
-#### SINFO
+### SINFO
 
 `SINFO(eErrClass, err_no, ...)`
 
@@ -26,7 +26,7 @@ SINFO(CE_Fatal, CPLE_AppDefined, "[Fatal] Unknown exception");
 [Fatal] Unknown exception
 ```
 
-#### NaN
+### NaN
 
 `NaN<typename>()`
 
@@ -49,7 +49,7 @@ std::cout << "d = " << d << std::endl;
 d = nan
 ```
 
-#### VALIDATE_ARGUMENT0
+### VALIDATE_ARGUMENT0
 
 `VALIDATE_ARGUMENT0(arg, func)`
 
@@ -79,12 +79,12 @@ func(d);
 
 ```
 - [2020-12-30 16:00:00]
-  [Function]    func
-  [Location]    slog/test/test.cpp (10)
-  [Failure]     Argument 'd' is NaN
+  [Function]  func
+  [Location]  slog/test/test.cpp (10)
+  [Failure]   Argument 'd' is NaN
 ```
 
-#### VALIDATE_ARGUMENT1
+### VALIDATE_ARGUMENT1
 
 `VALIDATE_ARGUMENT0(arg, func, ret)`
 
@@ -116,13 +116,13 @@ std::cout << "r = " << r << std::endl;
 
 ```
 - [2020-12-30 16:00:00]
-  [Function] func
-  [Location] slog/test/test.cpp (10)
-  [Failure] Argument 'd' is NaN
+  [Function]  func
+  [Location]  slog/test/test.cpp (10)
+  [Failure]   Argument 'd' is NaN
 r = 0
 ```
 
-#### SENTRY & SLEAVE
+### SENTRY & SLEAVE
 
 `SENTRY`
 `SLEAVE(ret)`
@@ -154,13 +154,13 @@ std::cout << "r = " << r << std::endl;
 
 ```
 - [2020-12-30 16:00:00]
-  [Function] func
-  [Location] slog/test/test.cpp (10)
-  [Failure]  vector::_M_range_check: __n (which is 18446744073709551614) >= this->size() (which is 5)
+  [Function]  func
+  [Location]  slog/test/test.cpp (10)
+  [Failure]   vector::_M_range_check: __n (which is 18446744073709551614) >= this->size() (which is 5)
 r = 233
 ```
 
-#### SFUNC_DEC
+### SFUNC_DEC
 
 `SFUNC_DEC(func)`
 
@@ -189,12 +189,12 @@ int r = new_func(-1);
 
 ```
 ~ [2020-12-30 16:00:00]
-  [Function] func(...)
-  [Location] slog/test/test.cpp (10)
-  [Failure]  vector::_M_range_check: __n (which is 18446744073709551614) >= this->size() (which is 5)
+  [Function]  func(...)
+  [Location]  slog/test/test.cpp (10)
+  [Failure]   vector::_M_range_check: __n (which is 18446744073709551614) >= this->size() (which is 5)
 ```
 
-#### SFUNC_MEM_DEC
+### SFUNC_MEM_DEC
 
 `SFUNC_MEM_DEC(obj, func)`
 
@@ -229,12 +229,12 @@ int r = new_func(-1);
 
 ```
 ~ [2020-12-30 16:00:00]
-  [Function] A::func(...)
-  [Location] slog/test/test.cpp (10)
-  [Failure]  vector::_M_range_check: __n (which is 18446744073709551614) >= this->size() (which is 5)
+  [Function]  A::func(...)
+  [Location]  slog/test/test.cpp (10)
+  [Failure]   vector::_M_range_check: __n (which is 18446744073709551614) >= this->size() (which is 5)
 ```
 
-#### SFUNC_RUN
+### SFUNC_RUN
 
 `SFUNC_RUN(func, ...)`
 
@@ -263,12 +263,12 @@ int r = SFUNC_RUN(func, -1);
 
 ```
 ~ [2020-12-30 16:00:00]
-  [Function] func(-1)
-  [Location] slog/test/test.cpp (10)
-  [Failure]  vector::_M_range_check: __n (which is 18446744073709551614) >= this->size() (which is 5)
+  [Function]  func(-1)
+  [Location]  slog/test/test.cpp (10)
+  [Failure]   vector::_M_range_check: __n (which is 18446744073709551614) >= this->size() (which is 5)
 ```
 
-#### SFUNC_MEM_RUN
+### SFUNC_MEM_RUN
 
 `SFUNC_MEM_RUN(obj, func, ...)`
 
@@ -303,12 +303,12 @@ int r = SFUNC_MEM_RUN(a, A::func, -1);
 
 ```
 ~ [2020-12-30 16:00:00]
-  [Function] A::func(-1)
-  [Location] slog/test/test.cpp (10)
-  [Failure]  vector::_M_range_check: __n (which is 18446744073709551614) >= this->size() (which is 5)
+  [Function]  A::func(-1)
+  [Location]  slog/test/test.cpp (10)
+  [Failure]   vector::_M_range_check: __n (which is 18446744073709551614) >= this->size() (which is 5)
 ```
 
-#### \_ENABLE_SLOG
+### \_ENABLE_SLOG
 
 `_ENABLE_SLOG`
 
