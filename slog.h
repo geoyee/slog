@@ -78,7 +78,7 @@ typedef enum
 #endif // CPL_ERROR_H_INCLUDED
 
 // Get current time
-std::string nowTimeStr()
+static std::string nowTimeStr()
 {
     std::time_t t = std::time(nullptr);
     char buffer[20];
@@ -367,6 +367,64 @@ std::function<RET(ARGS...)> makePlaceholders(RET (CLS::*func)(ARGS...), CLS *obj
                      std::placeholders::_6);
 }
 
+// Add for const member function
+template <typename CLS, typename RET, typename... ARGS, std::enable_if_t<sizeof...(ARGS) == 0, int> = 1>
+std::function<RET(ARGS...)> makePlaceholders(RET (CLS::*func)(ARGS...) const, CLS *obj)
+{
+    return std::bind(func, obj);
+}
+
+template <typename CLS, typename RET, typename... ARGS, std::enable_if_t<sizeof...(ARGS) == 1, int> = 1>
+std::function<RET(ARGS...)> makePlaceholders(RET (CLS::*func)(ARGS...) const, CLS *obj)
+{
+    return std::bind(func, obj, std::placeholders::_1);
+}
+
+template <typename CLS, typename RET, typename... ARGS, std::enable_if_t<sizeof...(ARGS) == 2, int> = 1>
+std::function<RET(ARGS...)> makePlaceholders(RET (CLS::*func)(ARGS...) const, CLS *obj)
+{
+    return std::bind(func, obj, std::placeholders::_1,
+                     std::placeholders::_2);
+}
+
+template <typename CLS, typename RET, typename... ARGS, std::enable_if_t<sizeof...(ARGS) == 3, int> = 1>
+std::function<RET(ARGS...)> makePlaceholders(RET (CLS::*func)(ARGS...) const, CLS *obj)
+{
+    return std::bind(func, obj, std::placeholders::_1,
+                     std::placeholders::_2,
+                     std::placeholders::_3);
+}
+
+template <typename CLS, typename RET, typename... ARGS, std::enable_if_t<sizeof...(ARGS) == 4, int> = 1>
+std::function<RET(ARGS...)> makePlaceholders(RET (CLS::*func)(ARGS...) const, CLS *obj)
+{
+    return std::bind(func, obj, std::placeholders::_1,
+                     std::placeholders::_2,
+                     std::placeholders::_3,
+                     std::placeholders::_4);
+}
+
+template <typename CLS, typename RET, typename... ARGS, std::enable_if_t<sizeof...(ARGS) == 5, int> = 1>
+std::function<RET(ARGS...)> makePlaceholders(RET (CLS::*func)(ARGS...) const, CLS *obj)
+{
+    return std::bind(func, obj, std::placeholders::_1,
+                     std::placeholders::_2,
+                     std::placeholders::_3,
+                     std::placeholders::_4,
+                     std::placeholders::_5);
+}
+
+template <typename CLS, typename RET, typename... ARGS, std::enable_if_t<sizeof...(ARGS) == 6, int> = 1>
+std::function<RET(ARGS...)> makePlaceholders(RET (CLS::*func)(ARGS...) const, CLS *obj)
+{
+    return std::bind(func, obj, std::placeholders::_1,
+                     std::placeholders::_2,
+                     std::placeholders::_3,
+                     std::placeholders::_4,
+                     std::placeholders::_5,
+                     std::placeholders::_6);
+}
+
 // Select function according to the return type
 template <typename RET, typename... ARGS, std::enable_if_t<!std::is_same<RET, void>::value, int> = 1>
 RET runFunction(std::function<RET(ARGS...)> func, ARGS... args)
@@ -433,6 +491,20 @@ public:
     {
         _func = makePlaceholders<CLS, RET, ARGS...>(func, obj);
     }
+    template <typename CLS>
+    constexpr TimeLog(RET (CLS::*func)(ARGS...) const,
+                      CLS *obj,
+                      const char *func_name,
+                      const char *file_name,
+                      const char *args_name,
+                      int line_no)
+        : _func_name(func_name),
+          _file_name(file_name),
+          _args_name(args_name),
+          _line_no(line_no)
+    {
+        _func = makePlaceholders<CLS, RET, ARGS...>(func, obj);
+    }
     RET operator()(ARGS... args)
     {
         SINFO(CE_Debug, CPLE_None, "~ %s", nowTimeStr().c_str());
@@ -486,6 +558,22 @@ constexpr TimeLog<RET(ARGS...)> makeTimeLogMemberFunction(RET (CLS::*func)(ARGS.
                                  line_no);
 }
 
+template <typename RET, typename CLS, typename... ARGS>
+constexpr TimeLog<RET(ARGS...)> makeTimeLogMemberFunction(RET (CLS::*func)(ARGS...) const,
+                                                          CLS *obj,
+                                                          const char *func_name,
+                                                          const char *file_name,
+                                                          const char *args_name,
+                                                          int line_no)
+{
+    return TimeLog<RET(ARGS...)>(func,
+                                 obj,
+                                 func_name,
+                                 file_name,
+                                 args_name,
+                                 line_no);
+}
+
 template <typename RET, typename... ARGS>
 constexpr auto decorateFunction(RET (*func)(ARGS...),
                                 const char *func_name,
@@ -500,6 +588,19 @@ constexpr auto decorateFunction(RET (*func)(ARGS...),
 
 template <typename RET, typename CLS, typename... ARGS>
 constexpr auto decorateMemberFunction(RET (CLS::*func)(ARGS...),
+                                      CLS *obj,
+                                      const char *func_name,
+                                      const char *file_name,
+                                      int line_no)
+{
+    return [=](ARGS... args) -> RET
+    {
+        return makeTimeLogMemberFunction(func, obj, func_name, file_name, "...", line_no)(args...);
+    };
+}
+
+template <typename RET, typename CLS, typename... ARGS>
+constexpr auto decorateMemberFunction(RET (CLS::*func)(ARGS...) const,
                                       CLS *obj,
                                       const char *func_name,
                                       const char *file_name,
