@@ -86,7 +86,7 @@ func(d);
 
 ### VALIDATE_ARGUMENT1
 
-`VALIDATE_ARGUMENT0(arg, func, ret)`
+`VALIDATE_ARGUMENT1(arg, func, ret)`
 
 宏函数，用于判断输入参数`arg`是否为 `NaN`，如果是则打印错误信息，并返回默认值`ret`，与 CPLError 中的`VALIDATE_POINTER1`使用方法相同。
 
