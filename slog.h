@@ -612,6 +612,14 @@ constexpr auto decorateMemberFunction(RET (CLS::*func)(ARGS...) const,
     };
 }
 
+inline const char *actLog(const char *func_name, const char *file_name, int line_no)
+{
+    SINFO(CE_Debug, CPLE_None, "- %s", nowTimeStr().c_str());
+    SINFO(CE_Debug, CPLE_None, "  [Function]\t%s", func_name);
+    SINFO(CE_Debug, CPLE_None, "  [Location]\t%s (%d)", file_name, line_no);
+    return func_name;
+}
+
 #define VALIDATE_ARGUMENT0(arg, func)                                                \
     do                                                                               \
     {                                                                                \
@@ -672,14 +680,17 @@ constexpr auto decorateMemberFunction(RET (CLS::*func)(ARGS...) const,
 #define SFUNC_MEM_RUN(obj, func, ...) \
     makeTimeLogMemberFunction(&func, &obj, #func, __FILE__, #__VA_ARGS__, __LINE__)(__VA_ARGS__)
 
+#define SACTION(action) ((void)actLog(#action, __FILE__, __LINE__), (action))
+
 #else
 
 #define SENTRY
 #define SLEAVE(result)
 #define SFUNC_DEC(func) func
-#define SFUNC_BIND_DEC(func) func
+#define SFUNC_MEM_DEC(obj, func) makePlaceholders(&func, &obj)
 #define SFUNC_RUN(func, ...) func(__VA_ARGS__)
 #define SFUNC_MEM_RUN(obj, func, ...) std::bind(&func, &obj, __VA_ARGS__)()
+#define SACTION(action) action
 
 #endif // _ENABLE_SLOG
 
