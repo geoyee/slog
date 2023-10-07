@@ -316,23 +316,41 @@ std::cout << "r = " << r << std::endl;
 r = -2147483648
 ```
 
-### \_ENABLE_SLOG
+### SACTION
 
-`_ENABLE_SLOG`
+`SACTION(action)`
 
-宏定义，用于控制是否启用其他宏函数的异常捕获或打印。
+宏函数，用于记录日志。
 
-返回值：无
+返回值：与`action`返回值相同
 
-参数：无
+参数：
+
+- `action`: 需要记录日志的操作
 
 例子：
 
 ```cpp
-#define _ENABLE_SLOG
-#include "slog.h"
+class A
+{
+public:
+    int func(int i)
+    {
+        std::vector<int> v = {1, 2, 3, 4, 5};
+        return v.at(i);
+    }
+};
 
-...
+A *a = new A();
+int r = SACTION(a->func(1));
+std::cout << "r = " << r << std::endl;
 ```
 
-输出：无
+输出：
+
+```
+~ [2020-12-30 16:00:00]
+  [Function]  A::func(1)
+  [Location]  slog/test/test.cpp (10)
+r = 2
+```

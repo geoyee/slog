@@ -12,40 +12,44 @@
 示例输出如下：
 
 ```
-~ 2023/09/17 16:48:52
+~ 2023/10/07 21:42:57
   [Function]    get(vec, 2)
   [Location]    E:\slog\sample.cpp (53)
   [Success]     It takes 15.000000 ms
 a = -3.14
-~ 2023/09/17 16:48:52
+~ 2023/10/07 21:42:57
   [Function]    get(...)
   [Location]    E:\slog\sample.cpp (56)
   [Failure]     vector::_M_range_check: __n (which is 20) >= this->size() (which is 5)
 b = nan
-~ 2023/09/17 16:48:52
+~ 2023/10/07 21:42:57
   [Function]    RealVec::init(vec)
   [Location]    E:\slog\sample.cpp (61)
   [Success]     It takes 0.000000 ms
 init vec
-~ 2023/09/17 16:48:52
+~ 2023/10/07 21:42:57
   [Function]    RealVec::get(3, 4)
   [Location]    E:\slog\sample.cpp (63)
   [Failure]     vector::_M_range_check: __n (which is 7) >= this->size() (which is 5)
 c = nan
-~ 2023/09/17 16:48:52
+~ 2023/10/07 21:42:57
   [Function]    RealVec::get(...)
   [Location]    E:\slog\sample.cpp (66)
   [Success]     It takes 0.000000 ms
 d = 90.18
-- 2023/09/17 16:48:52
+- 2023/10/07 21:42:57
   [Function]    get2
   [Location]    E:\slog\sample.cpp (35)
   [Failure]     vector::_M_range_check: __n (which is 18446744073709551614) >= this->size() (which is 5)
 e = nan
-- 2023/09/17 16:48:52
+- 2023/10/07 21:42:57
   [Function]    change
   [Location]    E:\slog\sample.cpp (44)
   [Failure]     Argument 'a' is NaN
+- 2023/10/07 21:42:57
+  [Function]    rv.get(1, 3)
+  [Location]    E:\dataFiles\github\slog\sample.cpp (74)
+g = 90.18
 ```
 
 ## 参考

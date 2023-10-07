@@ -1,5 +1,3 @@
-#define _ENABLE_SLOG
-
 #include <iostream>
 #include <vector>
 #include "slog.h"
@@ -72,6 +70,9 @@ int main(int argc, char *argv[])
 
     int *f = nullptr;
     change(f, 3);
+
+    double g = SACTION(rv.get(1, 3));
+    printf("g = %g\n", g);
 
     return 0;
 }
